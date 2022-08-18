@@ -1,0 +1,19 @@
+{
+  "name": "backend-clothingshop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aliakbarvafaei/clothing-shop-backend.git"
+  },
+  "author": "Aliakbar Vafaei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aliakbarvafaei/clothing-shop-backend/issues"
+  },
+  "homepage": "https://github.com/aliakbarvafaei/clothing-shop-backend#readme"
+}
