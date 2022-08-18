@@ -1,24 +1,63 @@
 //jshint esversion:6
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const https = require("https");
 const mongoose = require("mongoose");
 const schemas = require("./public/js/schemas");
 const md5 = require("md5");
+const cors = require('cors');
+const logger = require('morgan');
+
 
 const app = express();
 
-app.set('view engine', 'ejs');
-
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(express.static("public"));
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  })
+);
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser : true});
 
 // const Products = mongoose.model("products" ,schemas.productsSchema);
 const Users = mongoose.model("users" ,schemas.usersSchema);
 
+app.post("/register", function(req , res){
+    Users.findOne({ email: req.body.email }, function(err,findUser){
+      if(err){
+        console.log(err);
+        res.send(err);
+      }
+      else{
+        if(findUser){
+          console.log("data exist...");
+          res.send('exist');
+        }
+        else{
+        const NewUser = new Users({
+          fname: req.body.fname,
+          lname: req.body.lname,
+          email: req.body.email,
+          password: md5(req.body.password),
+        });
+        NewUser.save(function(err){
+          if(err){
+            res.send(err);
+          }
+          else{
+            console.log('registered...');
+            res.send("registered");
+            }
+        });
+        }
+      }
+    });
+  
+  });
 
 // app.post("/products",function (req , res) {
 //   const NewProduct = new products({
@@ -296,6 +335,6 @@ const Users = mongoose.model("users" ,schemas.usersSchema);
 // // }
 
 
-app.listen(3000, function() {
-  console.log("Server started on port 3000");
+app.listen(5000, function() {
+  console.log("Server started on port 5000");
 });

@@ -1,7 +1,7 @@
     const usersSchema ={
-    name: String,
+    fname: String,
+    lname: String,
     email: String,
-    phone: String,
     password: String,
     // cart: [{
     //   product:productsSchema,
