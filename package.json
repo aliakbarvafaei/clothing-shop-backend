@@ -12,6 +12,20 @@
   },
   "author": "Aliakbar Vafaei",
   "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "bootstrap-icons": "^1.8.3",
+    "express": "^4.16.3",
+    "font-awesome": "^4.7.0",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "import": "^0.0.6",
+    "lodash": "^4.17.11",
+    "md5": "^2.3.0",
+    "mongoose": "^6.4.6",
+    "nodemon": "^2.0.19",
+    "request": "^2.88.2"
+  },
   "bugs": {
     "url": "https://github.com/aliakbarvafaei/clothing-shop-backend/issues"
   },
