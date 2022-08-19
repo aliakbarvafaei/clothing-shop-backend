@@ -34,6 +34,7 @@ app.post("/register", function(req , res){
       }
       else{
         if(findUser){
+          res.status(409);
           console.log("data exist...");
           res.send('exist');
         }
@@ -49,6 +50,7 @@ app.post("/register", function(req , res){
             res.send(err);
           }
           else{
+            res.status(201);
             console.log('registered...');
             res.send("registered");
             }
