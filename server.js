@@ -1,13 +1,11 @@
 //jshint esversion:6
 const express = require("express");
 const bodyParser = require("body-parser");
-const https = require("https");
 const mongoose = require("mongoose");
 const schemas = require("./public/js/schemas");
 const md5 = require("md5");
 const cors = require('cors');
 const logger = require('morgan');
-
 
 const app = express();
 
@@ -27,40 +25,67 @@ mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser :
 const Users = mongoose.model("users" ,schemas.usersSchema);
 
 app.post("/register", function(req , res){
-    Users.findOne({ email: req.body.email }, function(err,findUser){
-      if(err){
-        console.log(err);
-        res.send(err);
+  Users.findOne({ email: req.body.email }, function(err,findUser){
+    if(err){
+      console.log(err);
+      res.send(err);
+    }
+    else{
+      if(findUser){
+        res.status(409);
+        console.log("data exist...");
+        res.send('exist');
       }
       else{
-        if(findUser){
-          res.status(409);
-          console.log("data exist...");
-          res.send('exist');
+      const NewUser = new Users({
+        fname: req.body.fname,
+        lname: req.body.lname,
+        email: req.body.email,
+        password: md5(req.body.password),
+      });
+      NewUser.save(function(err){
+        if(err){
+          res.send(err);
         }
         else{
-        const NewUser = new Users({
-          fname: req.body.fname,
-          lname: req.body.lname,
-          email: req.body.email,
-          password: md5(req.body.password),
-        });
-        NewUser.save(function(err){
-          if(err){
-            res.send(err);
+          res.status(201);
+          console.log('registered...');
+          res.send("registered");
           }
-          else{
-            res.status(201);
-            console.log('registered...');
-            res.send("registered");
-            }
-        });
-        }
+      });
       }
-    });
-  
+    }
   });
 
+});
+
+app.post("/login", function(req , res){
+  Users.findOne({ email: req.body.email }, function(err,findUser){
+    if(err){
+      console.log(err);
+      res.send(err);
+    }
+    else{
+      if(findUser){
+        if(findUser.password === md5(req.body.password)){
+          res.status(200);
+          console.log('Login success...');
+          res.send(findUser);
+        }
+        else{
+          res.status(401);
+          console.log('Login unsuccess: password notCorrect...');
+          res.send('Password not correct');
+        }
+      }
+      else{
+        res.status(404);
+        console.log('User not found...');
+        res.send('User not found');
+      }
+    }
+  });
+});
 // app.post("/products",function (req , res) {
 //   const NewProduct = new products({
 //     id: req.body.id,
