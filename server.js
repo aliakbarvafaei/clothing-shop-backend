@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 
 mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser : true});
 
-// const Products = mongoose.model("products" ,schemas.productsSchema);
+const Products = mongoose.model("products" ,schemas.productsSchema);
 const Users = mongoose.model("users" ,schemas.usersSchema);
 
 app.post("/register", function(req , res){
@@ -86,28 +86,41 @@ app.post("/login", function(req , res){
     }
   });
 });
-// app.post("/products",function (req , res) {
-//   const NewProduct = new products({
-//     id: req.body.id,
-//     title: req.body.title,
-//     price: req.body.price,
-//     description: req.body.description,
-//     category: req.body.category,
-//     image: req.body.image,
-//     rating: {
-//     rate: req.body.rate,
-//     count: req.body.count
-//     }
-//   });
-//   NewProduct.save(function(err){
-//     if(err){
-//       res.send(err);
-//     }
-//     else{
-//       res.send("success");
-//     }
-//   });
-// });
+app.post("/products",function (req , res) {
+  const NewProduct = new Products({
+    code: req.body.code,
+    name: req.body.name,
+    price: req.body.price,
+    off: req.body.off,
+    size: (req.body.size).split(","),
+    description: req.body.description,
+    gender: req.body.gender,
+    category: req.body.category,
+    images: (req.body.images).split(","),
+    date: req.body.date,
+    rating: req.body.rating,
+    colors: (req.body.colors).split(","),
+    stock: req.body.stock,
+  });
+  NewProduct.save(function(err){
+    if(err){
+      res.send(err);
+    }
+    else{
+      res.send("success");
+    }
+  });
+});
+app.get("/products", function ( req , res){
+  Products.find(function (err , productsDetails){
+    if(err){
+      res.send(err);
+    }
+    else{
+      res.send(productsDetails);
+    }
+  });
+});
 
 // var positionScroll=0;
 // var stateToast="";
