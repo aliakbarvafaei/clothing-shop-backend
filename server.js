@@ -121,7 +121,25 @@ app.get("/products", function ( req , res){
     }
   });
 });
-
+app.get("/product/:idProduct", function(req , res){
+  Products.findOne({ code: req.params.idProduct }, function(err,findProduct){
+    if(err){
+      console.log(err);
+      res.send(err);
+    }
+    else{
+      if(findProduct){
+        console.log('Product found...');
+        res.send(findProduct);
+      }
+      else{
+        res.status(404);
+        console.log('Product not found...');
+        res.send('Product not found');
+      }
+    }
+  });
+});
 // var positionScroll=0;
 // var stateToast="";
 // var user_log="";
@@ -342,37 +360,37 @@ app.get("/products", function ( req , res){
 //   });
 // });
 
-// // app.post("/", function(req , res){
-// //   const title = req.body.Title;
-// //   const postDetail = req.body.postDetails;
-// //   posts.push( { title : title, detail : postDetail, limit : postDetail.substring(0,100) } );
-// //   res.redirect("/");
-// // });
-// // app.get("/about", function ( req , res){
-// //   res.render("about" , {textAbout: aboutContent});
-// // });
-// // app.get("/contact", function ( req , res){
-// //   res.render("contact" , {textContact: contactContent});
-// // });
-// // app.get("/posts/:titlePost", function ( req , res){
-// //   res.render("post" , {postsinf: posts, titlePost : req.params.titlePost});
-// // });
-// // app.get("/compose", function ( req , res){
-// //   res.render("compose");
-// // });
-// // const URL ="https://fakestoreapi.com/products/";
-// //
-// // for(let i=1;i<=20;i++){
-// //   https.get( URL + i, function(response){
-// //     response.on('data', (data) => {
-// //       try {
-// //         posts.push( JSON.parse(data) );
-// //       } catch (error) {
-// //           return null;
-// //       }
-// //     });
-// //   });
-// // }
+// app.post("/", function(req , res){
+//   const title = req.body.Title;
+//   const postDetail = req.body.postDetails;
+//   posts.push( { title : title, detail : postDetail, limit : postDetail.substring(0,100) } );
+//   res.redirect("/");
+// });
+// app.get("/about", function ( req , res){
+//   res.render("about" , {textAbout: aboutContent});
+// });
+// app.get("/contact", function ( req , res){
+//   res.render("contact" , {textContact: contactContent});
+// });
+// app.get("/posts/:titlePost", function ( req , res){
+//   res.render("post" , {postsinf: posts, titlePost : req.params.titlePost});
+// });
+// app.get("/compose", function ( req , res){
+//   res.render("compose");
+// });
+// const URL ="https://fakestoreapi.com/products/";
+//
+// for(let i=1;i<=20;i++){
+//   https.get( URL + i, function(response){
+//     response.on('data', (data) => {
+//       try {
+//         posts.push( JSON.parse(data) );
+//       } catch (error) {
+//           return null;
+//       }
+//     });
+//   });
+// }
 
 
 app.listen(5000, function() {
