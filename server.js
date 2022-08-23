@@ -86,60 +86,80 @@ app.post("/login", function(req , res){
     }
   });
 });
-app.post("/products",function (req , res) {
-  const NewProduct = new Products({
-    code: req.body.code,
-    name: req.body.name,
-    price: req.body.price,
-    off: req.body.off,
-    size: (req.body.size).split(","),
-    description: req.body.description,
-    gender: req.body.gender,
-    category: req.body.category,
-    images: (req.body.images).split(","),
-    date: req.body.date,
-    rating: req.body.rating,
-    colors: (req.body.colors).split(","),
-    stock: req.body.stock,
-  });
-  NewProduct.save(function(err){
-    if(err){
-      res.send(err);
-    }
-    else{
-      res.send("success");
-    }
-  });
-});
-app.get("/products", function ( req , res){
-  Products.find(function (err , productsDetails){
-    if(err){
-      res.send(err);
-    }
-    else{
-      res.send(productsDetails);
-    }
-  });
-});
-app.get("/product/:idProduct", function(req , res){
-  Products.findOne({ code: req.params.idProduct }, function(err,findProduct){
-    if(err){
-      console.log(err);
-      res.send(err);
-    }
-    else{
-      if(findProduct){
-        console.log('Product found...');
-        res.send(findProduct);
+
+app.route('/products')
+  .post(function (req , res) {
+    const NewProduct = new Products({
+      code: req.body.code,
+      name: req.body.name,
+      price: req.body.price,
+      off: req.body.off,
+      size: (req.body.size).split(","),
+      description: req.body.description,
+      gender: req.body.gender,
+      category: req.body.category,
+      images: (req.body.images).split(","),
+      date: req.body.date,
+      rating: req.body.rating,
+      colors: (req.body.colors).split(","),
+      stock: req.body.stock,
+    });
+    NewProduct.save(function(err){
+      if(err){
+        res.send(err);
       }
       else{
-        res.status(404);
-        console.log('Product not found...');
-        res.send('Product not found');
+        res.send("success");
       }
-    }
+    });
+  })
+  .get(function ( req , res){
+    Products.find(function (err , productsDetails){
+      if(err){
+        res.send(err);
+      }
+      else{
+        res.send(productsDetails);
+      }
+    });
   });
-});
+
+
+app.route("/product/:idProduct")
+  .get(function(req , res){
+    Products.findOne({ code: req.params.idProduct }, function(err,findProduct){
+      if(err){
+        console.log(err);
+        res.send(err);
+      }
+      else{
+        if(findProduct){
+          console.log('Product found...');
+          res.send(findProduct);
+        }
+        else{
+          res.status(404);
+          console.log('Product not found...');
+          res.send('Product not found');
+        }
+      }
+    });
+  })
+  .patch(function(req, res){
+    Products.updateOne(
+      {code: req.params.idProduct},
+      {$set: req.body},
+      function(err){
+        if(!err){
+          res.send("changed");
+        } else{
+          res.send(err);
+        }
+      }
+    )
+  });
+
+  
 // var positionScroll=0;
 // var stateToast="";
 // var user_log="";

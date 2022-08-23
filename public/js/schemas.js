@@ -14,7 +14,6 @@
     price: String,
     off: String,
     size: [],
-    description: String,
     gender: String,
     category: String,
     images: [],
@@ -22,6 +21,10 @@
     rating: String,
     colors: [],
     stock: String,
+    description: String,
+    details: String,
+    video: String,
+    review: String,
   };
   module.exports = {
       usersSchema: usersSchema,
