@@ -26,8 +26,13 @@
     video: String,
     review: String,
   };
+  const wishlistSchema ={
+    email: String,
+    code: String,
+  };
   module.exports = {
       usersSchema: usersSchema,
-      productsSchema: productsSchema
+      productsSchema: productsSchema,
+      wishlistSchema: wishlistSchema
   };
   

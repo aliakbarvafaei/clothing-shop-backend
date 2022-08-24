@@ -23,6 +23,41 @@ mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser :
 
 const Products = mongoose.model("products" ,schemas.productsSchema);
 const Users = mongoose.model("users" ,schemas.usersSchema);
+const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
+
+
+app.route('/wishlist/:emailUser')
+  .post(function(req, res){
+    const NewWishlist = new Wishlist({
+      email: req.params.emailUser,
+      code: req.body.code,
+    });
+    NewWishlist.save(function(err){
+      if(err){
+        res.send(err);
+      }
+      else{
+        res.send("success");
+      }
+    });
+  })
+  .get(function(req, res){
+    Wishlist.find({email: req.params.emailUser},{code:1 , _id:0},function (err, result){
+      if(!err){
+        var productsCode=[];
+        result.forEach(item=>productsCode.push(item.code));
+        Products.find({code :{ $in: productsCode }}, function(err,findProduct){
+          if(!err){
+            res.send(findProduct);
+          }else{
+            console.log(err);
+          }
+        });
+      }else{
+        console.log(err);
+      }
+    });  
+  });
 
 app.post("/register", function(req , res){
   Users.findOne({ email: req.body.email }, function(err,findUser){
