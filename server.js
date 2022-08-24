@@ -28,18 +28,30 @@ const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
 
 app.route('/wishlist/:emailUser')
   .post(function(req, res){
-    const NewWishlist = new Wishlist({
-      email: req.params.emailUser,
-      code: req.body.code,
-    });
-    NewWishlist.save(function(err){
-      if(err){
-        res.send(err);
+    Wishlist.find({email: req.params.emailUser, code:req.body.code},function (err, result){
+      if(!err){
+        if(result.length>0){
+          res.status(409);
+          console.log("data exist...");
+          res.send('exist');
+        }else{
+          const NewWishlist = new Wishlist({
+            email: req.params.emailUser,
+            code: req.body.code,
+          });
+          NewWishlist.save(function(err){
+            if(err){
+              res.send(err);
+            }
+            else{
+              res.send("success");
+            }
+          });
+        }
+      }else{
+        console.log(err);
       }
-      else{
-        res.send("success");
-      }
-    });
+    }); 
   })
   .get(function(req, res){
     Wishlist.find({email: req.params.emailUser},{code:1 , _id:0},function (err, result){
@@ -57,7 +69,19 @@ app.route('/wishlist/:emailUser')
         console.log(err);
       }
     });  
-  });
+  })
+  .delete(function(req, res){
+    var email = req.params.emailUser.split('!')[0];
+    var code = req.params.emailUser.split('!')[1];
+
+    Wishlist.findOneAndRemove({ email: email, code:code },function(err){
+      if(!err){
+        res.send("deleted");
+      }else{
+        console.log(err);
+      }
+    })
+  })
 
 app.post("/register", function(req , res){
   Users.findOne({ email: req.body.email }, function(err,findUser){
