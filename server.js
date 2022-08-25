@@ -24,7 +24,89 @@ mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser :
 const Products = mongoose.model("products" ,schemas.productsSchema);
 const Users = mongoose.model("users" ,schemas.usersSchema);
 const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
+const Cart = mongoose.model("cart" ,schemas.cartSchema);
 
+app.route('/cart/:emailUser')
+  .post(function(req, res){
+    Cart.find({email: req.params.emailUser, code:req.body.code},function (err, result){
+      if(!err){
+        if(result.length>0){
+          res.status(409);
+          console.log("data exist...");
+          res.send('exist');
+        }else{
+          const NewCart = new Cart({
+            email: req.params.emailUser,
+            code: req.body.code,
+            quantity: req.body.quantity,
+          });
+          NewCart.save(function(err){
+            if(err){
+              res.send(err);
+            }
+            else{
+              res.send("success");
+            }
+          });
+        }
+      }else{
+        console.log(err);
+      }
+    }); 
+  })
+  .get(function(req, res){
+    Cart.find({email: req.params.emailUser},{code:1, quantity:1, _id:0},function (err, result){
+      if(!err){
+        var productsCode=[];
+        result.forEach(item=>productsCode.push(item.code));
+        Products.find({code :{ $in: productsCode }}, function(err,findProduct){
+          if(!err){
+            var productWithQuantity = [];
+            for(let i=0;i<result.length;i++){
+              for(let k=0;k<findProduct.length;k++){
+                if(result[i].code===findProduct[k].code){
+                  productWithQuantity = [...productWithQuantity,{product:findProduct[k], quantity:result[i].quantity}];
+                  break;
+                }
+              }
+            }
+            res.send(productWithQuantity);
+          }else{
+            console.log(err);
+          }
+        });
+      }else{
+        console.log(err);
+      }
+    });  
+  })
+  .delete(function(req, res){
+    var email = req.params.emailUser.split('!')[0];
+    var code = req.params.emailUser.split('!')[1];
+
+    Cart.findOneAndRemove({ email: email, code:code },function(err){
+      if(!err){
+        res.send("deleted");
+      }else{
+        console.log(err);
+      }
+    })
+  })
+  .patch(function(req, res){
+    var email = req.params.emailUser.split('!')[0];
+    var code = req.params.emailUser.split('!')[1];
+    Cart.updateOne(
+      {email: email,code: code},
+      {$set: req.body},
+      function(err){
+        if(!err){
+          res.send("changed");
+        } else{
+          res.send(err);
+        }
+      }
+    )
+  });
 
 app.route('/wishlist/:emailUser')
   .post(function(req, res){

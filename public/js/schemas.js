@@ -30,9 +30,15 @@
     email: String,
     code: String,
   };
+  const cartSchema ={
+    email: String,
+    code: String,
+    quantity: String,
+  };
   module.exports = {
       usersSchema: usersSchema,
       productsSchema: productsSchema,
-      wishlistSchema: wishlistSchema
+      wishlistSchema: wishlistSchema,
+      cartSchema: cartSchema,
   };
   
