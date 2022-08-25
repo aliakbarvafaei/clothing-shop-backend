@@ -26,6 +26,26 @@ const Users = mongoose.model("users" ,schemas.usersSchema);
 const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
 const Cart = mongoose.model("cart" ,schemas.cartSchema);
 
+app.route('/isincart/:emailUser')
+  .get(function(req, res){
+    var email = req.params.emailUser.split('!')[0];
+    var code = req.params.emailUser.split('!')[1];
+
+    Cart.findOne({ email: email, code:code },function(err,find){
+      if(!err){
+        if(find)
+          res.send(find.quantity);
+        else{
+          res.status(404);
+          console.log("data exist...");
+          res.send('exist');
+        }
+      }else{
+        console.log(err);
+      }
+    })
+  })
+
 app.route('/cart/:emailUser')
   .post(function(req, res){
     Cart.find({email: req.params.emailUser, code:req.body.code},function (err, result){
