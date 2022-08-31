@@ -37,8 +37,8 @@ app.route('/isincart/:emailUser')
           res.send(find.quantity);
         else{
           res.status(404);
-          console.log("data exist...");
-          res.send('exist');
+          console.log("data not exist in cart");
+          res.send('not exist');
         }
       }else{
         console.log(err);
