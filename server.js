@@ -6,6 +6,7 @@ const schemas = require("./public/js/schemas");
 const md5 = require("md5");
 const cors = require('cors');
 const logger = require('morgan');
+const path = require('path');
 
 const app = express();
 
