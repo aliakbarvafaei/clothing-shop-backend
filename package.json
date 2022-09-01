@@ -33,8 +33,7 @@
     "morgan": "^1.10.0",
     "nodemon": "^2.0.19",
     "path": "^0.12.7",
-    "request": "^2.88.2",
-    "videojs-youtube": "^2.6.1"
+    "request": "^2.88.2"
   },
   "bugs": {
     "url": "https://github.com/aliakbarvafaei/clothing-shop-backend/issues"
