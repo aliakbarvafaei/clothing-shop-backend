@@ -574,6 +574,6 @@ app.route("/product/:idProduct")
 // }
 
 
-app.listen(5000, function() {
+app.listen(process.env.PORT || 5000 , function() {
   console.log("Server started on port 5000");
 });
