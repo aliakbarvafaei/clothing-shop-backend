@@ -27,6 +27,12 @@ const Users = mongoose.model("users" ,schemas.usersSchema);
 const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
 const Cart = mongoose.model("cart" ,schemas.cartSchema);
 
+app.use(express.static(path.join(__dirname + "/pub")));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
+});
+
 app.route('/isincart/:emailUser')
   .get(function(req, res){
     var email = req.params.emailUser.split('!')[0];
@@ -574,11 +580,6 @@ app.route("/product/:idProduct")
 //   });
 // }
 
-app.use(express.static(path.join(__dirname + "/pub")));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '/pub', 'index.html'));
-});
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
 // });
