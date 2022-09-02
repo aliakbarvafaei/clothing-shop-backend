@@ -577,7 +577,7 @@ app.route("/product/:idProduct")
 app.use(express.static(path.join(__dirname + "/pub")));
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname + '/pub', 'index.html'));
+  res.sendFile(path.join(__dirname, '/pub', 'index.html'));
 });
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
