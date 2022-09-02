@@ -10,12 +10,12 @@ const path = require('path');
 
 const app = express();
 
-// app.use(
-//   cors({
-//     origin: 'http://localhost:3000',
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  })
+);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -27,11 +27,6 @@ const Users = mongoose.model("users" ,schemas.usersSchema);
 const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
 const Cart = mongoose.model("cart" ,schemas.cartSchema);
 
-app.use(express.static(path.join(__dirname + "/pub")));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
-});
 
 app.route('/isincart/:emailUser')
   .get(function(req, res){
@@ -327,7 +322,7 @@ app.route("/product/:idProduct")
     )
   });
 
-  
+
 // var positionScroll=0;
 // var stateToast="";
 // var user_log="";
@@ -582,6 +577,11 @@ app.route("/product/:idProduct")
 
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
+// });
+
+// app.use(express.static(path.join(__dirname + "/pub")));
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
 // });
 
 const PORT = process.env.PORT || 5000;
