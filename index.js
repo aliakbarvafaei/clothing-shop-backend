@@ -266,6 +266,9 @@ app.route('/products')
       rating: req.body.rating,
       colors: (req.body.colors).split(","),
       stock: req.body.stock,
+      details: req.body.details,
+      review: req.body.review,
+      video: req.body.video,
     });
     NewProduct.save(function(err){
       if(err){
