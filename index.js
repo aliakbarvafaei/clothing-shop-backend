@@ -587,6 +587,12 @@ app.route("/product/:idProduct")
 //   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
 // });
 
+if(process.env.NODE_ENV === "production" ){
+  app.use(express.static('build'));
+  app.get('*', (req, res)=>{
+    req.sendFile(path.resolve(__dirname,'build','index.html'))
+  })
+}
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, function() {
