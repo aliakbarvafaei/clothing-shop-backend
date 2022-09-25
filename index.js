@@ -1,329 +1,329 @@
 //jshint esversion:6
 const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
-const schemas = require("./public/js/schemas");
-const md5 = require("md5");
-const cors = require('cors');
-const logger = require('morgan');
+// const bodyParser = require("body-parser");
+// const mongoose = require("mongoose");
+// const schemas = require("./public/js/schemas");
+// const md5 = require("md5");
+// const cors = require('cors');
+// const logger = require('morgan');
 const path = require('path');
 
 const app = express();
 
 // app.use(
 //   cors({
-//     origin: 'http://localhost:3000',
+//     origin: 'https://clothing-shopping-front.herokuapp.com',
 //     credentials: true,
 //   })
 // );
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// app.use(logger('dev'));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
 
-mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser : true});
+// mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser : true});
 
-const Products = mongoose.model("products" ,schemas.productsSchema);
-const Users = mongoose.model("users" ,schemas.usersSchema);
-const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
-const Cart = mongoose.model("cart" ,schemas.cartSchema);
-
-
-app.route('/isincart/:emailUser')
-  .get(function(req, res){
-    var email = req.params.emailUser.split('!')[0];
-    var code = req.params.emailUser.split('!')[1];
-
-    Cart.findOne({ email: email, code:code },function(err,find){
-      if(!err){
-        if(find)
-          res.send(find.quantity);
-        else{
-          res.status(404);
-          console.log("data not exist in cart");
-          res.send('not exist');
-        }
-      }else{
-        console.log(err);
-      }
-    })
-  })
-
-app.route('/cart/:emailUser')
-  .post(function(req, res){
-    Cart.find({email: req.params.emailUser, code:req.body.code},function (err, result){
-      if(!err){
-        if(result.length>0){
-          res.status(409);
-          console.log("data exist...");
-          res.send('exist');
-        }else{
-          const NewCart = new Cart({
-            email: req.params.emailUser,
-            code: req.body.code,
-            quantity: req.body.quantity,
-          });
-          NewCart.save(function(err){
-            if(err){
-              res.send(err);
-            }
-            else{
-              res.send("success");
-            }
-          });
-        }
-      }else{
-        console.log(err);
-      }
-    }); 
-  })
-  .get(function(req, res){
-    Cart.find({email: req.params.emailUser},{code:1, quantity:1, _id:0},function (err, result){
-      if(!err){
-        var productsCode=[];
-        result.forEach(item=>productsCode.push(item.code));
-        Products.find({code :{ $in: productsCode }}, function(err,findProduct){
-          if(!err){
-            var productWithQuantity = [];
-            for(let i=0;i<result.length;i++){
-              for(let k=0;k<findProduct.length;k++){
-                if(result[i].code===findProduct[k].code){
-                  productWithQuantity = [...productWithQuantity,{product:findProduct[k], quantity:result[i].quantity}];
-                  break;
-                }
-              }
-            }
-            res.send(productWithQuantity);
-          }else{
-            console.log(err);
-          }
-        });
-      }else{
-        console.log(err);
-      }
-    });  
-  })
-  .delete(function(req, res){
-    var email = req.params.emailUser.split('!')[0];
-    var code = req.params.emailUser.split('!')[1];
-
-    Cart.findOneAndRemove({ email: email, code:code },function(err){
-      if(!err){
-        res.send("deleted");
-      }else{
-        console.log(err);
-      }
-    })
-  })
-  .patch(function(req, res){
-    var email = req.params.emailUser.split('!')[0];
-    var code = req.params.emailUser.split('!')[1];
-    Cart.updateOne(
-      {email: email,code: code},
-      {$set: req.body},
-      function(err){
-        if(!err){
-          res.send("changed");
-        } else{
-          res.send(err);
-        }
-      }
-    )
-  });
-
-app.route('/wishlist/:emailUser')
-  .post(function(req, res){
-    Wishlist.find({email: req.params.emailUser, code:req.body.code},function (err, result){
-      if(!err){
-        if(result.length>0){
-          res.status(409);
-          console.log("data exist...");
-          res.send('exist');
-        }else{
-          const NewWishlist = new Wishlist({
-            email: req.params.emailUser,
-            code: req.body.code,
-          });
-          NewWishlist.save(function(err){
-            if(err){
-              res.send(err);
-            }
-            else{
-              res.send("success");
-            }
-          });
-        }
-      }else{
-        console.log(err);
-      }
-    }); 
-  })
-  .get(function(req, res){
-    Wishlist.find({email: req.params.emailUser},{code:1 , _id:0},function (err, result){
-      if(!err){
-        var productsCode=[];
-        result.forEach(item=>productsCode.push(item.code));
-        Products.find({code :{ $in: productsCode }}, function(err,findProduct){
-          if(!err){
-            res.send(findProduct);
-          }else{
-            console.log(err);
-          }
-        });
-      }else{
-        console.log(err);
-      }
-    });  
-  })
-  .delete(function(req, res){
-    var email = req.params.emailUser.split('!')[0];
-    var code = req.params.emailUser.split('!')[1];
-
-    Wishlist.findOneAndRemove({ email: email, code:code },function(err){
-      if(!err){
-        res.send("deleted");
-      }else{
-        console.log(err);
-      }
-    })
-  })
-
-app.post("/register", function(req , res){
-  Users.findOne({ email: req.body.email }, function(err,findUser){
-    if(err){
-      console.log(err);
-      res.send(err);
-    }
-    else{
-      if(findUser){
-        res.status(409);
-        console.log("data exist...");
-        res.send('exist');
-      }
-      else{
-      const NewUser = new Users({
-        fname: req.body.fname,
-        lname: req.body.lname,
-        email: req.body.email,
-        password: md5(req.body.password),
-      });
-      NewUser.save(function(err){
-        if(err){
-          res.send(err);
-        }
-        else{
-          res.status(201);
-          console.log('registered...');
-          res.send("registered");
-          }
-      });
-      }
-    }
-  });
-
-});
-
-app.post("/login", function(req , res){
-  Users.findOne({ email: req.body.email }, function(err,findUser){
-    if(err){
-      console.log(err);
-      res.send(err);
-    }
-    else{
-      if(findUser){
-        if(findUser.password === md5(req.body.password)){
-          res.status(200);
-          console.log('Login success...');
-          res.send(findUser);
-        }
-        else{
-          res.status(401);
-          console.log('Login unsuccess: password notCorrect...');
-          res.send('Password not correct');
-        }
-      }
-      else{
-        res.status(404);
-        console.log('User not found...');
-        res.send('User not found');
-      }
-    }
-  });
-});
-
-app.route('/products')
-  .post(function (req , res) {
-    const NewProduct = new Products({
-      code: req.body.code,
-      name: req.body.name,
-      price: req.body.price,
-      off: req.body.off,
-      size: (req.body.size).split(","),
-      description: req.body.description,
-      gender: req.body.gender,
-      category: req.body.category,
-      images: (req.body.images).split(","),
-      date: req.body.date,
-      rating: req.body.rating,
-      colors: (req.body.colors).split(","),
-      stock: req.body.stock,
-      details: req.body.details,
-      review: req.body.review,
-      video: req.body.video,
-    });
-    NewProduct.save(function(err){
-      if(err){
-        res.send(err);
-      }
-      else{
-        res.send("success");
-      }
-    });
-  })
-  .get(function ( req , res){
-    Products.find(function (err , productsDetails){
-      if(err){
-        res.send(err);
-      }
-      else{
-        res.send(productsDetails);
-      }
-    });
-  });
+// const Products = mongoose.model("products" ,schemas.productsSchema);
+// const Users = mongoose.model("users" ,schemas.usersSchema);
+// const Wishlist = mongoose.model("wishlist" ,schemas.wishlistSchema);
+// const Cart = mongoose.model("cart" ,schemas.cartSchema);
 
 
-app.route("/product/:idProduct")
-  .get(function(req , res){
-    Products.findOne({ code: req.params.idProduct }, function(err,findProduct){
-      if(err){
-        console.log(err);
-        res.send(err);
-      }
-      else{
-        if(findProduct){
-          console.log('Product found...');
-          res.send(findProduct);
-        }
-        else{
-          res.status(404);
-          console.log('Product not found...');
-          res.send('Product not found');
-        }
-      }
-    });
-  })
-  .patch(function(req, res){
-    Products.updateOne(
-      {code: req.params.idProduct},
-      {$set: req.body},
-      function(err){
-        if(!err){
-          res.send("changed");
-        } else{
-          res.send(err);
-        }
-      }
-    )
-  });
+// app.route('/isincart/:emailUser')
+//   .get(function(req, res){
+//     var email = req.params.emailUser.split('!')[0];
+//     var code = req.params.emailUser.split('!')[1];
+
+//     Cart.findOne({ email: email, code:code },function(err,find){
+//       if(!err){
+//         if(find)
+//           res.send(find.quantity);
+//         else{
+//           res.status(404);
+//           console.log("data not exist in cart");
+//           res.send('not exist');
+//         }
+//       }else{
+//         console.log(err);
+//       }
+//     })
+//   })
+
+// app.route('/cart/:emailUser')
+//   .post(function(req, res){
+//     Cart.find({email: req.params.emailUser, code:req.body.code},function (err, result){
+//       if(!err){
+//         if(result.length>0){
+//           res.status(409);
+//           console.log("data exist...");
+//           res.send('exist');
+//         }else{
+//           const NewCart = new Cart({
+//             email: req.params.emailUser,
+//             code: req.body.code,
+//             quantity: req.body.quantity,
+//           });
+//           NewCart.save(function(err){
+//             if(err){
+//               res.send(err);
+//             }
+//             else{
+//               res.send("success");
+//             }
+//           });
+//         }
+//       }else{
+//         console.log(err);
+//       }
+//     }); 
+//   })
+//   .get(function(req, res){
+//     Cart.find({email: req.params.emailUser},{code:1, quantity:1, _id:0},function (err, result){
+//       if(!err){
+//         var productsCode=[];
+//         result.forEach(item=>productsCode.push(item.code));
+//         Products.find({code :{ $in: productsCode }}, function(err,findProduct){
+//           if(!err){
+//             var productWithQuantity = [];
+//             for(let i=0;i<result.length;i++){
+//               for(let k=0;k<findProduct.length;k++){
+//                 if(result[i].code===findProduct[k].code){
+//                   productWithQuantity = [...productWithQuantity,{product:findProduct[k], quantity:result[i].quantity}];
+//                   break;
+//                 }
+//               }
+//             }
+//             res.send(productWithQuantity);
+//           }else{
+//             console.log(err);
+//           }
+//         });
+//       }else{
+//         console.log(err);
+//       }
+//     });  
+//   })
+//   .delete(function(req, res){
+//     var email = req.params.emailUser.split('!')[0];
+//     var code = req.params.emailUser.split('!')[1];
+
+//     Cart.findOneAndRemove({ email: email, code:code },function(err){
+//       if(!err){
+//         res.send("deleted");
+//       }else{
+//         console.log(err);
+//       }
+//     })
+//   })
+//   .patch(function(req, res){
+//     var email = req.params.emailUser.split('!')[0];
+//     var code = req.params.emailUser.split('!')[1];
+//     Cart.updateOne(
+//       {email: email,code: code},
+//       {$set: req.body},
+//       function(err){
+//         if(!err){
+//           res.send("changed");
+//         } else{
+//           res.send(err);
+//         }
+//       }
+//     )
+//   });
+
+// app.route('/wishlist/:emailUser')
+//   .post(function(req, res){
+//     Wishlist.find({email: req.params.emailUser, code:req.body.code},function (err, result){
+//       if(!err){
+//         if(result.length>0){
+//           res.status(409);
+//           console.log("data exist...");
+//           res.send('exist');
+//         }else{
+//           const NewWishlist = new Wishlist({
+//             email: req.params.emailUser,
+//             code: req.body.code,
+//           });
+//           NewWishlist.save(function(err){
+//             if(err){
+//               res.send(err);
+//             }
+//             else{
+//               res.send("success");
+//             }
+//           });
+//         }
+//       }else{
+//         console.log(err);
+//       }
+//     }); 
+//   })
+//   .get(function(req, res){
+//     Wishlist.find({email: req.params.emailUser},{code:1 , _id:0},function (err, result){
+//       if(!err){
+//         var productsCode=[];
+//         result.forEach(item=>productsCode.push(item.code));
+//         Products.find({code :{ $in: productsCode }}, function(err,findProduct){
+//           if(!err){
+//             res.send(findProduct);
+//           }else{
+//             console.log(err);
+//           }
+//         });
+//       }else{
+//         console.log(err);
+//       }
+//     });  
+//   })
+//   .delete(function(req, res){
+//     var email = req.params.emailUser.split('!')[0];
+//     var code = req.params.emailUser.split('!')[1];
+
+//     Wishlist.findOneAndRemove({ email: email, code:code },function(err){
+//       if(!err){
+//         res.send("deleted");
+//       }else{
+//         console.log(err);
+//       }
+//     })
+//   })
+
+// app.post("/register", function(req , res){
+//   Users.findOne({ email: req.body.email }, function(err,findUser){
+//     if(err){
+//       console.log(err);
+//       res.send(err);
+//     }
+//     else{
+//       if(findUser){
+//         res.status(409);
+//         console.log("data exist...");
+//         res.send('exist');
+//       }
+//       else{
+//       const NewUser = new Users({
+//         fname: req.body.fname,
+//         lname: req.body.lname,
+//         email: req.body.email,
+//         password: md5(req.body.password),
+//       });
+//       NewUser.save(function(err){
+//         if(err){
+//           res.send(err);
+//         }
+//         else{
+//           res.status(201);
+//           console.log('registered...');
+//           res.send("registered");
+//           }
+//       });
+//       }
+//     }
+//   });
+
+// });
+
+// app.post("/login", function(req , res){
+//   Users.findOne({ email: req.body.email }, function(err,findUser){
+//     if(err){
+//       console.log(err);
+//       res.send(err);
+//     }
+//     else{
+//       if(findUser){
+//         if(findUser.password === md5(req.body.password)){
+//           res.status(200);
+//           console.log('Login success...');
+//           res.send(findUser);
+//         }
+//         else{
+//           res.status(401);
+//           console.log('Login unsuccess: password notCorrect...');
+//           res.send('Password not correct');
+//         }
+//       }
+//       else{
+//         res.status(404);
+//         console.log('User not found...');
+//         res.send('User not found');
+//       }
+//     }
+//   });
+// });
+
+// app.route('/products')
+//   .post(function (req , res) {
+//     const NewProduct = new Products({
+//       code: req.body.code,
+//       name: req.body.name,
+//       price: req.body.price,
+//       off: req.body.off,
+//       size: (req.body.size).split(","),
+//       description: req.body.description,
+//       gender: req.body.gender,
+//       category: req.body.category,
+//       images: (req.body.images).split(","),
+//       date: req.body.date,
+//       rating: req.body.rating,
+//       colors: (req.body.colors).split(","),
+//       stock: req.body.stock,
+//       details: req.body.details,
+//       review: req.body.review,
+//       video: req.body.video,
+//     });
+//     NewProduct.save(function(err){
+//       if(err){
+//         res.send(err);
+//       }
+//       else{
+//         res.send("success");
+//       }
+//     });
+//   })
+//   .get(function ( req , res){
+//     Products.find(function (err , productsDetails){
+//       if(err){
+//         res.send(err);
+//       }
+//       else{
+//         res.send(productsDetails);
+//       }
+//     });
+//   });
+
+
+// app.route("/product/:idProduct")
+//   .get(function(req , res){
+//     Products.findOne({ code: req.params.idProduct }, function(err,findProduct){
+//       if(err){
+//         console.log(err);
+//         res.send(err);
+//       }
+//       else{
+//         if(findProduct){
+//           console.log('Product found...');
+//           res.send(findProduct);
+//         }
+//         else{
+//           res.status(404);
+//           console.log('Product not found...');
+//           res.send('Product not found');
+//         }
+//       }
+//     });
+//   })
+//   .patch(function(req, res){
+//     Products.updateOne(
+//       {code: req.params.idProduct},
+//       {$set: req.body},
+//       function(err){
+//         if(!err){
+//           res.send("changed");
+//         } else{
+//           res.send(err);
+//         }
+//       }
+//     )
+//   });
 
 
 // var positionScroll=0;
@@ -586,6 +586,8 @@ app.route("/product/:idProduct")
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
 // });
+const PORT = process.env.PORT || 5000;
+
 
 if(process.env.NODE_ENV === "production" ){
   app.use(express.static('build'));
@@ -593,7 +595,6 @@ if(process.env.NODE_ENV === "production" ){
     req.sendFile(path.resolve(__dirname,'build','index.html'))
   })
 }
-const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, function() {
   console.log(`Server started on port ${PORT}`);
