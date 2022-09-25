@@ -10,12 +10,12 @@ const path = require('path');
 
 const app = express();
 
-app.use(
-  cors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: 'http://localhost:3000',
+//     credentials: true,
+//   })
+// );
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -587,12 +587,12 @@ app.route("/product/:idProduct")
 //   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
 // });
 
-if(process.env.NODE_ENV === "production" ){
-  app.use(express.static('build'));
+// if(process.env.NODE_ENV === "production" ){
+  app.use(express.static(path.join(__dirname + 'build')));
   app.get('*', (req, res)=>{
     req.sendFile(path.resolve(__dirname,'build','index.html'))
   })
-}
+//}
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, function() {
