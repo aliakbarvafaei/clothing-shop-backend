@@ -1,5 +1,6 @@
 //jshint esversion:6
 const express = require("express");
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const { findOneListing,
   findListing,
@@ -25,7 +26,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const uri = "mongodb+srv://clothing-shopping:clothing-shopping@clothing-shopping.geubyls.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);  
 
 try {
