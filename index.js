@@ -22,33 +22,17 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// async function listDatabases(client){
-//   databasesList = await client.db().admin().listDatabases();
+const uri = "mongodb+srv://clothing-shopping:clothing-shopping@clothing-shopping.geubyls.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri);  
 
-//   console.log("Databases:");
-//   databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-// };
+try {
+    client.connect();
+} catch (e) {
+    console.error(e);
+}
 
-// async function main(){
+findOneListingByEmail(client,"aliakbarvafaei.065@gmail.com","users")
 
-  const uri = "mongodb+srv://clothing-shopping:clothing-shopping@clothing-shopping.geubyls.mongodb.net/?retryWrites=true&w=majority";
-  const client = new MongoClient(uri);  
-  
-  try {
-      // Connect to the MongoDB cluster
-       client.connect();
-
-      // Make the appropriate DB calls
-      // await  listDatabases(client);
-       findOneListingByEmail(client,"aliakbarvafaei.065@gmail.com")
-
-  } catch (e) {
-      console.error(e);
-  } finally {
-       client.close();
-  }
-
-// main().catch(console.error);
 
 // mongoose.connect("mongodb://localhost:27017/ClothingShopping",{useNewUrlParser : true});
 
