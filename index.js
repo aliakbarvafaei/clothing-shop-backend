@@ -226,10 +226,10 @@ app.route("/product/:idProduct")
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
 // });
 
-// app.use(express.static(path.join(__dirname + "/pub")));
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
-// });
+app.use(express.static(path.join(__dirname + "/pub")));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
+});
 
 const PORT = process.env.PORT || 5000;
 
