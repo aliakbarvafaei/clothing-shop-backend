@@ -1,11 +1,28 @@
-async function findOneListingByEmail(client, emailOfListing,collection) {
-    const result = await client.db("clothing-shopping-app").collection(collection).findOne({ email: emailOfListing });
+async function findOneListing(client, filter,collection) {
+    const result = await client.db("clothing-shopping-app").collection(collection).findOne(filter);
   
     if (result) {
-        console.log(`Found a listing in the collection with the Email '${emailOfListing}':`);
-        console.log(result);
+        console.log(`Found a listing in the collection with the Email '${filter.email}':`);
+        // console.log(result);
+        return result;
     } else {
-        console.log(`No listings found with the name '${emailOfListing}'`);
+        console.log(`No listings found with the name '${filter.email}'`);
+        return "";
+    }
+  }
+
+async function findListing(client, filter, collection) {
+    const result = await client.db("clothing-shopping-app").collection(collection).find(filter);
+  
+    if (result) {
+        const array = await result.toArray();
+
+        console.log(`Found a listing in the collection with the Email '${filter.email}':`);
+        // console.log(array);
+        return array;
+    } else {
+        console.log(`No listings found with the name '${filter.email}'`);
+        return [];
     }
   }
 
@@ -14,6 +31,7 @@ async function createMultipleListings(client, newListings,collection){
 
     console.log(`${result.insertedCount} new listing(s) created with the following id(s):`);
     console.log(result.insertedIds);       
+    return `${result.insertedCount} new listing(s) created with the following id(s):`;
     }
 
 async function listDatabases(client){
@@ -23,12 +41,13 @@ async function listDatabases(client){
     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
   };
 
-async function updateListingByEmail(client, emailOfListing, updatedListing,collection) {
+async function updateOneListing(client, filter, updatedListing,collection) {
     const result = await client.db("clothing-shopping-app").collection(collection)
-                        .updateOne({ email: emailOfListing }, { $set: updatedListing });
+                        .updateOne(filter, { $set: updatedListing });
 
     console.log(`${result.matchedCount} document(s) matched the query criteria.`);
     console.log(`${result.modifiedCount} document(s) was/were updated.`);
+    return `${result.modifiedCount} document(s) was/were updated.`;
     };
 
 async function upsertListingByEmail(client, emailOfListing, updatedListing,collection) {
@@ -53,10 +72,11 @@ async function updateAllListingsToHavePropertyType(client,collection) {
     console.log(`${result.modifiedCount} document(s) was/were updated.`);
 }
 
-async function deleteListingByEmail(client, emailOfListing,collection) {
+async function deleteOneListing(client, filter, collection) {
     const result = await client.db("clothing-shopping-app").collection(collection)
-            .deleteOne({ email: emailOfListing });
+            .deleteOne(filter);
     console.log(`${result.deletedCount} document(s) was/were deleted.`);
+    return `${result.deletedCount} document(s) was/were deleted.`;
 }
 
 async function deleteListingsScrapedBeforeDate(client, date,collection) {
@@ -66,12 +86,13 @@ async function deleteListingsScrapedBeforeDate(client, date,collection) {
 }
 
   module.exports = {
-    findOneListingByEmail: findOneListingByEmail,
+    findOneListing: findOneListing,
+    findListing: findListing,
     createMultipleListings: createMultipleListings,
     listDatabases: listDatabases,
-    updateListingByEmail: updateListingByEmail,
+    updateOneListing: updateOneListing,
     upsertListingByEmail: upsertListingByEmail,
     updateAllListingsToHavePropertyType: updateAllListingsToHavePropertyType,
-    deleteListingByEmail: deleteListingByEmail,
+    deleteOneListing: deleteOneListing,
     deleteListingsScrapedBeforeDate: deleteListingsScrapedBeforeDate,
 };
