@@ -1,7 +1,8 @@
 //jshint esversion:6
 const express = require("express");
-require("dotenv").config();
-const bodyParser = require("body-parser");
+const dotenv = require("dotenv")
+dotenv.config();
+// const bodyParser = require("body-parser");
 const { findOneListing,
   findListing,
   createMultipleListings,
@@ -10,21 +11,23 @@ const { findOneListing,
 } = require("./public/database/method")
 const md5 = require("md5");
 const cors = require('cors');
-const logger = require('morgan');
-const path = require('path');
+const http = require("http");
+const helmet = require("helmet");
+const compression = require("compression");
+const config = require("./config/config");
+// const logger = require('morgan'); 
+// const path = require('path');
 const { MongoClient } = require('mongodb');
+const { allowedDomains, port } = require("./config/config");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-  })
-);
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use( cors({ origin: allowedDomains}) );
+app.use(helmet());
+app.use(compression());
+// app.use(logger('dev'));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
 
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);  
@@ -226,13 +229,15 @@ app.route("/product/:idProduct")
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
 // });
 
-app.use(express.static(path.join(__dirname + "/pub")));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
-});
+// app.use(express.static(path.join(__dirname + "/pub")));
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname + '/pub' + '/index.html'));
+// });
 
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, function() {
-  console.log(`Server started on port ${PORT}`);
+const server = http.createServer(app);
+
+app.listen(port, function() {
+  console.log(`Server started on port ${port}`);
 });
