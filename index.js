@@ -206,6 +206,12 @@ app.route('/products')
     res.send(result);
   });
 
+app.route('/productsFilter')
+  .post(async function (req, res){
+    const result =await findListing(client, req.body.filters, "products", { pageNumber: parseInt(req.body.pageNumber), size: parseInt(req.body.pageSize) });
+    res.send(result);
+  });
+
 
 app.route("/product/:idProduct")
   .get(async function(req , res){

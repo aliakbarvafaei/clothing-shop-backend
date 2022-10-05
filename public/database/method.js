@@ -11,9 +11,28 @@ async function findOneListing(client, filter,collection) {
     }
   }
 
-async function findListing(client, filter, collection) {
-    const result = await client.db("clothing-shopping-app").collection(collection).find(filter);
-  
+async function findListing(client, filter, collection, limited=false) {
+    if(!limited)
+        result = await client.db("clothing-shopping-app").collection(collection).find(filter);
+    else{
+        result = await client.db("clothing-shopping-app").collection(collection)
+        .find( {
+           "colors" : { $in : filter.color},
+            "size" : { $in : filter.size},
+            "gender" : { $in : filter.gender},
+            "category" : { $in : filter.category},
+            "priceDiscounted" : { $gt : parseInt(filter.priceRange.from), $lt : parseInt(filter.priceRange.to) },
+            $or : [
+                {"code" : {$regex : filter.searchInput}},
+                {"name" : {$regex : filter.searchInput}},
+                {"name" : {$regex : (filter.searchInput).toUpperCase()}},
+            ],
+            "stock" : filter.inStock===true ? { $gt : 0 } : { $gt : -1 } ,
+        }
+        )
+        .skip((limited.pageNumber-1)*limited.size).limit(limited.size);
+    }
+
     if (result) {
         const array = await result.toArray();
         // if(filter.email)
