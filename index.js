@@ -218,6 +218,15 @@ app.route('/products')
         })
   });
 
+app.route('/user/:emailUser')
+  .get(async function (req, res){
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.users WHERE email='${req.params.emailUser}'`
+      ,function(err, result){
+        if (err) throw err;
+        res.send(result[0]);
+      })
+  })
+
 app.route('/productsFilter')
   .post(async function (req, res){
     var filter = req.body.filters;  
