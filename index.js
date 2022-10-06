@@ -227,7 +227,12 @@ app.route('/productsFilter')
     filter.gender.map((item,index)=>{
       filter.gender[index]="'"+item+"'";
     })
-
+    function checkArrayInArray(arr1,arr2){
+      for(let i=0;i<arr1.length;i++)
+        if(arr2.includes(arr1[i]))
+          return true;
+      return false;
+    }
     connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products
     WHERE category IN (${filter.category}) AND gender IN (${filter.gender}) 
     AND priceDiscounted >= ${parseInt(filter.priceRange.from)}
@@ -235,14 +240,16 @@ app.route('/productsFilter')
     AND stock >= ${filter.inStock===true ? 1:0}
     AND ( code LIKE '%${filter.searchInput}%' 
     OR name LIKE '%${filter.searchInput.toUpperCase()}%'
-    OR name LIKE '%${filter.searchInput.toLowerCase()}%')
-    LIMIT ${(parseInt(req.body.pageNumber)-1)*(parseInt(req.body.pageSize))} , ${parseInt(req.body.pageSize)};`
+    OR name LIKE '%${filter.searchInput.toLowerCase()}%');`
         ,function(err, result){
+          result = result.filter((item)=>{
+            return checkArrayInArray(item.colors.split(','),filter.color) && checkArrayInArray(item.size.split(','),filter.size);
+          })
           if (err) throw err;
-          res.send(result);
+          const startIndex =(parseInt(req.body.pageNumber)-1)*(parseInt(req.body.pageSize))
+          res.send(result.slice(startIndex,startIndex+parseInt(req.body.pageSize)));
         })
     // const result =await findListing(client, req.body.filters, "products", { pageNumber: parseInt(req.body.pageNumber), size: parseInt(req.body.pageSize) });
-    // res.send(result);
   });
 
 app.route("/product/:idProduct")
