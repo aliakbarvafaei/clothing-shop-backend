@@ -11,5 +11,8 @@ module.exports = {
             process.env.LOCAL_CLIENT_APP,
             process.env.LOCAL_SERVER_API
         ]
-    )
+    ),
+    Host_Mysql: process.env.HOST_MYSQL,
+    User_Mysql: process.env.USER_MYSQL,
+    Password_Mysql: process.env.PASSWORD_MYSQL
 }

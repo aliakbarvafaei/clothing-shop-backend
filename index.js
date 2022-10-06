@@ -2,23 +2,15 @@
 const express = require("express");
 const dotenv = require("dotenv")
 dotenv.config();
-// const bodyParser = require("body-parser");
-const { findOneListing,
-  findListing,
-  createMultipleListings,
-  deleteOneListing,
-  updateOneListing
-} = require("./public/database/method")
 const md5 = require("md5");
 const cors = require('cors');
 const http = require("http");
 const helmet = require("helmet");
 const compression = require("compression");
-const config = require("./config/config");
 const logger = require('morgan'); 
-// const path = require('path');
-const { MongoClient } = require('mongodb');
 const { allowedDomains, port } = require("./config/config");
+const mysql = require('mysql');
+const { insertDataProduct } = require("./public/database/methodMysql");
 
 const app = express();
 
@@ -27,209 +19,247 @@ app.use(helmet());
 app.use(compression());
 app.use(logger('dev'));
 app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false }));
 
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);  
+var connectMysql = mysql.createConnection({
+  host: "localhost",
+  user: "sqluser",
+  password: "Vafa2012#"
+});
 
-try {
-    client.connect();
-} catch (e) {
-    console.error(e);
-}
+connectMysql.connect(function(err) {
+  if (err) throw err;
+  console.log("Connected to mysql database...");
+});
 
 app.route('/isincart/:emailUser')
   .get(async function(req, res){
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
-    const result =await findOneListing(client, { email: email, code:code }, "carts");
-  
-    if (result) {
-      res.send(result.quantity);
-    } else {
-      res.status(404);
-      console.log("data not exist in cart");
-      res.send('not exist');
-    }
+
+    connectMysql.query("SELECT * FROM `clothing-shoppig`.`carts` WHERE email ='"+email+"' AND code ="+code+";"
+      , function (err, result) {
+      if (err) throw err;
+      if (result.length>0) {
+        res.send(String(result[0].quantity));
+      } else {
+        res.status(404);
+        console.log("data not exist in cart");
+        res.send('not exist');
+      }
+    });
   })
 
 app.route('/cart/:emailUser')
   .post(async function(req, res){
-    const result =await findListing(client, {email: req.params.emailUser, code:req.body.code}, "carts");
-    if(result.length>0){
-      res.status(409);
-      console.log("data exist...");
-      res.send('exist');
-    }else{
-      const NewCart = [{
-        email: req.params.emailUser,
-        code: req.body.code,
-        quantity: req.body.quantity,
-      }];
-      const answer = await createMultipleListings(client, NewCart, "carts");
-      res.send(answer);
-    } 
+    connectMysql.query("SELECT * FROM `clothing-shoppig`.`carts` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
+      , function (err, result) {
+      if (err) throw err;
+      console.log(result)
+      if (result.length>0) {
+        res.status(409);
+        console.log("data exist...");
+        res.send('exist');
+      } else {
+        connectMysql.query("INSERT INTO `clothing-shoppig`.`carts` (email,code,quantity) VALUES ('"+req.params.emailUser+"',"+req.body.code+","+req.body.quantity+")"
+        ,function(err, result){
+          if (err) throw err;
+          res.send('New product add to cart');
+        })
+      }
+    });
   })
   .get(async function(req, res){
-    const result =await findListing(client, {email: req.params.emailUser}, "carts");
-    var productsCode=[];
-    result.forEach(item=>productsCode.push(item.code));
-
-    const result2 =await findListing(client, {code :{ $in: productsCode }}, "products");
-
-    var productWithQuantity = [];
-    for(let i=0;i<result.length;i++){
-      for(let k=0;k<result2.length;k++){
-        if(result[i].code===result2[k].code){
-          productWithQuantity = [...productWithQuantity,{product:result2[k], quantity:result[i].quantity}];
-          break;
-        }
-      }
-    }
-    res.send(productWithQuantity);  
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.carts INNER JOIN \`clothing-shoppig\`.products
+    ON carts.code=products.code
+    WHERE email = '${req.params.emailUser}';`
+        ,function(err, result){
+          if (err) throw err;
+          res.send(result);
+        })
   })
   .delete(async function(req, res){
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
 
-    const result =await deleteOneListing(client, { email: email, code:code }, "carts");
-    res.send(result);
+    connectMysql.query(`DELETE FROM \`clothing-shoppig\`.carts WHERE email='${email}' AND code=${code};`
+        ,function(err, result){
+          if (err) throw err;
+          res.send("deleted product from cart");
+        })
   })
   .patch(async function(req, res){
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
 
-    const result = await updateOneListing(client, {email: email,code: code}, req.body, "carts");
-    res.send(result);
+    connectMysql.query(`UPDATE \`clothing-shoppig\`.carts
+    SET quantity = ${req.body.quantity}
+    WHERE email = '${email}' AND code = ${code} ;`
+        ,function(err, result){
+          if (err) throw err;
+          res.send("updated product in cart");
+        })
   });
 
 app.route('/wishlist/:emailUser')
   .post(async function(req, res){
-    const result =await findListing(client, {email: req.params.emailUser, code:req.body.code}, "wishlists");
-    if(result.length>0){
-      res.status(409);
-      console.log("data exist...");
-      res.send('exist');
-    }else{
-      const NewWishlist = [{
-        email: req.params.emailUser,
-        code: req.body.code
-      }];
-      const answer = await createMultipleListings(client, NewWishlist, "wishlists");
-      res.send(answer);
-    }
+    connectMysql.query("SELECT * FROM `clothing-shoppig`.`wishlists` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
+      , function (err, result) {
+      if (err) throw err;
+      console.log(result)
+      if (result.length>0) {
+        res.status(409);
+        console.log("data exist...");
+        res.send('exist');
+      } else {
+        connectMysql.query("INSERT INTO `clothing-shoppig`.`wishlists` (email,code) VALUES ('"+req.params.emailUser+"',"+req.body.code+")"
+        ,function(err, result){
+          if (err) throw err;
+          res.send('New product add to wishlists');
+        })
+      }
+    });
   })
   .get(async function(req, res){
-    const result =await findListing(client, {email: req.params.emailUser}, "wishlists");
-    var productsCode=[];
-    result.forEach(item=>productsCode.push(item.code));
-
-    const result2 =await findListing(client, {code :{ $in: productsCode }}, "products");
-
-    res.send(result2);
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.wishlists INNER JOIN \`clothing-shoppig\`.products
+    ON wishlists.code=products.code
+    WHERE email = '${req.params.emailUser}';`
+        ,function(err, result){
+          if (err) throw err;
+          res.send(result);
+        })
   })
   .delete(async function(req, res){
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
+    
+    connectMysql.query(`DELETE FROM \`clothing-shoppig\`.wishlists WHERE email='${email}' AND code=${code};`
+    ,function(err, result){
+      if (err) throw err;
+      res.send("deleted product from wishlists");
+    })
 
-    const result =await deleteOneListing(client, { email: email, code:code }, "wishlists");
-    res.send(result);
   })
 
 app.post("/register",async function(req , res){
 
-  const result =await findOneListing(client, { email: req.body.email }, "users");
-  if(result){
-    res.status(409);
-    console.log("data exist...");
-    res.send('exist');
-  }else{
-    const NewUser = [{
-      fname: req.body.fname,
-      lname: req.body.lname,
-      email: req.body.email,
-      password: md5(req.body.password),
-    }];
-    const answer = await createMultipleListings(client, NewUser, "users");
-    res.status(201);
-    console.log('registered...');
-    res.send("registered");
-  }
+  connectMysql.query("SELECT * FROM `clothing-shoppig`.users WHERE email ='"+req.body.email+"';"
+      , function (err, result) {
+      if (err) throw err;
+      if(result.length>0){
+        res.status(409);
+        console.log("data exist...");
+        res.send('exist');
+      } else {
+        connectMysql.query(`INSERT INTO \`clothing-shoppig\`.users (email,fname,lname,password) 
+        VALUES ('${req.body.email}','${req.body.fname}','${req.body.lname}','${md5(req.body.password)}')`
+        ,function(err, result){
+          if (err) throw err;
+          res.status(201);
+          console.log('registered...');
+          res.send("registered");
+        })
+      }
+  })
 
 });
 
 app.post("/login",async function(req , res){
-  const result =await findOneListing(client, { email: req.body.email }, "users");
-  if(result){
-    if(result.password === md5(req.body.password)){
-      res.status(200);
-      console.log('Login success...');
-      res.send(result);
-    }
-    else{
-      res.status(401);
-      console.log('Login unsuccess: password notCorrect...');
-      res.send('Password not correct');
-    }
-  }else{
-    res.status(404);
-    console.log('User not found...');
-    res.send('User not found');
-  }
+  connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.users WHERE email ='${req.body.email}';`
+      , function (err, result) {
+      if (err) throw err;
+      if(result.length>0){
+        if(result[0].password === md5(req.body.password)){
+          res.status(200);
+          console.log('Login success...');
+          res.send(result[0]);
+        }
+        else{
+          res.status(401);
+          console.log('Login unsuccess: password notCorrect...');
+          res.send('Password not correct');
+        }
+      } else {
+        res.status(404);
+        console.log('User not found...');
+        res.send('User not found');
+      }
+  })
 });
 
 app.route('/products')
   .post(async function (req , res) {
-    const NewProduct = [{
+    const NewProduct = {
       code: req.body.code,
       name: req.body.name,
       price: req.body.price,
       off: req.body.off,
-      size: (req.body.size).split(","),
+      size: req.body.size,
       description: req.body.description,
       gender: req.body.gender,
       category: req.body.category,
-      images: (req.body.images).split(","),
+      images: req.body.images,
       date: req.body.date,
       rating: req.body.rating,
-      colors: (req.body.colors).split(","),
+      colors: req.body.colors,
       stock: req.body.stock,
       details: req.body.details,
       review: req.body.review,
       video: req.body.video,
-    }];
-    const answer = await createMultipleListings(client, NewProduct, "products");
-    res.send(answer);
+    };
+    insertDataProduct(connectMysql, NewProduct, "products");
+    res.send("New product added.")
   })
   .get(async function ( req , res){
-    const result =await findListing(client, {}, "products");
-    res.send(result);
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products LIMIT 8;`
+        ,function(err, result){
+          if (err) throw err;
+          res.send(result);
+        })
   });
 
 app.route('/productsFilter')
   .post(async function (req, res){
-    const result =await findListing(client, req.body.filters, "products", { pageNumber: parseInt(req.body.pageNumber), size: parseInt(req.body.pageSize) });
-    res.send(result);
-  });
+    var filter = req.body.filters;  
+    filter.category.map((item,index)=>{
+      filter.category[index]="'"+item+"'";
+    })
+    filter.gender.map((item,index)=>{
+      filter.gender[index]="'"+item+"'";
+    })
 
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products
+    WHERE category IN (${filter.category}) AND gender IN (${filter.gender}) 
+    AND priceDiscounted >= ${parseInt(filter.priceRange.from)}
+    AND priceDiscounted <= ${parseInt(filter.priceRange.to)}
+    AND stock >= ${filter.inStock===true ? 1:0}
+    AND ( code LIKE '%${filter.searchInput}%' 
+    OR name LIKE '%${filter.searchInput.toUpperCase()}%'
+    OR name LIKE '%${filter.searchInput.toLowerCase()}%')
+    LIMIT ${(parseInt(req.body.pageNumber)-1)*(parseInt(req.body.pageSize))} , ${parseInt(req.body.pageSize)};`
+        ,function(err, result){
+          if (err) throw err;
+          res.send(result);
+        })
+    // const result =await findListing(client, req.body.filters, "products", { pageNumber: parseInt(req.body.pageNumber), size: parseInt(req.body.pageSize) });
+    // res.send(result);
+  });
 
 app.route("/product/:idProduct")
   .get(async function(req , res){
-    const result =await findOneListing(client, { code: req.params.idProduct }, "products");
-    if(result){
-      console.log('Product found...');
-      res.send(result);
-    }else{
-      res.status(404);
-      console.log('Product not found...');
-      res.send('Product not found');
-    }
+    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products WHERE code ='${req.params.idProduct}';`
+      , function (err, result) {
+      if (err) throw err;
+      if(result.length>0){
+        console.log('Product found...');
+        res.send(result[0]);
+      }else{
+        res.status(404);
+        console.log('Product not found...');
+        res.send('Product not found');
+      }
+    })
   })
-  .patch(async function(req, res){
-    const result = await updateOneListing(client, {code: req.params.idProduct}, req.body, "products");
-    res.send("changed");
-  });
-
 
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname, '/../client/build', 'index.html'));
