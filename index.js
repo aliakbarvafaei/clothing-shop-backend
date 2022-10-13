@@ -24,7 +24,8 @@ app.use(express.urlencoded({ extended: false }));
 var connectMysql = mysql.createConnection({
   host: "localhost",
   user: "sqluser",
-  password: "Vafa2012#"
+  password: "Vafa2012#",
+  database: "clothing-shoppig"
 });
 
 connectMysql.connect(function(err) {
@@ -37,7 +38,7 @@ app.route('/isincart/:emailUser')
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
 
-    connectMysql.query("SELECT * FROM `clothing-shoppig`.`carts` WHERE email ='"+email+"' AND code ="+code+";"
+    connectMysql.query("SELECT * FROM `carts` WHERE email ='"+email+"' AND code ="+code+";"
       , function (err, result) {
       if (err) throw err;
       if (result.length>0) {
@@ -52,7 +53,7 @@ app.route('/isincart/:emailUser')
 
 app.route('/cart/:emailUser')
   .post(async function(req, res){
-    connectMysql.query("SELECT * FROM `clothing-shoppig`.`carts` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
+    connectMysql.query("SELECT * FROM `carts` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
       , function (err, result) {
       if (err) throw err;
       console.log(result)
@@ -61,7 +62,7 @@ app.route('/cart/:emailUser')
         console.log("data exist...");
         res.send('exist');
       } else {
-        connectMysql.query("INSERT INTO `clothing-shoppig`.`carts` (email,code,quantity) VALUES ('"+req.params.emailUser+"',"+req.body.code+","+req.body.quantity+")"
+        connectMysql.query("INSERT INTO `carts` (email,code,quantity) VALUES ('"+req.params.emailUser+"',"+req.body.code+","+req.body.quantity+")"
         ,function(err, result){
           if (err) throw err;
           res.send('New product add to cart');
@@ -70,7 +71,7 @@ app.route('/cart/:emailUser')
     });
   })
   .get(async function(req, res){
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.carts INNER JOIN \`clothing-shoppig\`.products
+    connectMysql.query(`SELECT * FROM carts INNER JOIN products
     ON carts.code=products.code
     WHERE email = '${req.params.emailUser}';`
         ,function(err, result){
@@ -82,7 +83,7 @@ app.route('/cart/:emailUser')
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
 
-    connectMysql.query(`DELETE FROM \`clothing-shoppig\`.carts WHERE email='${email}' AND code=${code};`
+    connectMysql.query(`DELETE FROM carts WHERE email='${email}' AND code=${code};`
         ,function(err, result){
           if (err) throw err;
           res.send("deleted product from cart");
@@ -92,7 +93,7 @@ app.route('/cart/:emailUser')
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
 
-    connectMysql.query(`UPDATE \`clothing-shoppig\`.carts
+    connectMysql.query(`UPDATE carts
     SET quantity = ${req.body.quantity}
     WHERE email = '${email}' AND code = ${code} ;`
         ,function(err, result){
@@ -103,7 +104,7 @@ app.route('/cart/:emailUser')
 
 app.route('/wishlist/:emailUser')
   .post(async function(req, res){
-    connectMysql.query("SELECT * FROM `clothing-shoppig`.`wishlists` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
+    connectMysql.query("SELECT * FROM `wishlists` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
       , function (err, result) {
       if (err) throw err;
       console.log(result)
@@ -112,7 +113,7 @@ app.route('/wishlist/:emailUser')
         console.log("data exist...");
         res.send('exist');
       } else {
-        connectMysql.query("INSERT INTO `clothing-shoppig`.`wishlists` (email,code) VALUES ('"+req.params.emailUser+"',"+req.body.code+")"
+        connectMysql.query("INSERT INTO `wishlists` (email,code) VALUES ('"+req.params.emailUser+"',"+req.body.code+")"
         ,function(err, result){
           if (err) throw err;
           res.send('New product add to wishlists');
@@ -121,7 +122,7 @@ app.route('/wishlist/:emailUser')
     });
   })
   .get(async function(req, res){
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.wishlists INNER JOIN \`clothing-shoppig\`.products
+    connectMysql.query(`SELECT * FROM wishlists INNER JOIN products
     ON wishlists.code=products.code
     WHERE email = '${req.params.emailUser}';`
         ,function(err, result){
@@ -133,7 +134,7 @@ app.route('/wishlist/:emailUser')
     var email = req.params.emailUser.split('!')[0];
     var code = req.params.emailUser.split('!')[1];
     
-    connectMysql.query(`DELETE FROM \`clothing-shoppig\`.wishlists WHERE email='${email}' AND code=${code};`
+    connectMysql.query(`DELETE FROM wishlists WHERE email='${email}' AND code=${code};`
     ,function(err, result){
       if (err) throw err;
       res.send("deleted product from wishlists");
@@ -143,7 +144,7 @@ app.route('/wishlist/:emailUser')
 
 app.post("/register",async function(req , res){
 
-  connectMysql.query("SELECT * FROM `clothing-shoppig`.users WHERE email ='"+req.body.email+"';"
+  connectMysql.query("SELECT * FROM users WHERE email ='"+req.body.email+"';"
       , function (err, result) {
       if (err) throw err;
       if(result.length>0){
@@ -151,7 +152,7 @@ app.post("/register",async function(req , res){
         console.log("data exist...");
         res.send('exist');
       } else {
-        connectMysql.query(`INSERT INTO \`clothing-shoppig\`.users (email,fname,lname,password) 
+        connectMysql.query(`INSERT INTO users (email,fname,lname,password) 
         VALUES ('${req.body.email}','${req.body.fname}','${req.body.lname}','${md5(req.body.password)}')`
         ,function(err, result){
           if (err) throw err;
@@ -165,7 +166,7 @@ app.post("/register",async function(req , res){
 });
 
 app.post("/login",async function(req , res){
-  connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.users WHERE email ='${req.body.email}';`
+  connectMysql.query(`SELECT * FROM users WHERE email ='${req.body.email}';`
       , function (err, result) {
       if (err) throw err;
       if(result.length>0){
@@ -211,7 +212,7 @@ app.route('/products')
     res.send("New product added.")
   })
   .get(async function ( req , res){
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products LIMIT 8;`
+    connectMysql.query(`SELECT * FROM products LIMIT 8;`
         ,function(err, result){
           if (err) throw err;
           res.send(result);
@@ -220,7 +221,7 @@ app.route('/products')
 
 app.route('/user/:emailUser')
   .get(async function (req, res){
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.users WHERE email='${req.params.emailUser}'`
+    connectMysql.query(`SELECT * FROM users WHERE email='${req.params.emailUser}'`
       ,function(err, result){
         if (err) throw err;
         res.send(result[0]);
@@ -242,7 +243,7 @@ app.route('/productsFilter')
           return true;
       return false;
     }
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products
+    connectMysql.query(`SELECT * FROM products
     WHERE category IN (${filter.category}) AND gender IN (${filter.gender}) 
     AND priceDiscounted >= ${parseInt(filter.priceRange.from)}
     AND priceDiscounted <= ${parseInt(filter.priceRange.to)}
@@ -263,7 +264,7 @@ app.route('/productsFilter')
 
 app.route("/product/:idProduct")
   .get(async function(req , res){
-    connectMysql.query(`SELECT * FROM \`clothing-shoppig\`.products WHERE code ='${req.params.idProduct}';`
+    connectMysql.query(`SELECT * FROM products WHERE code ='${req.params.idProduct}';`
       , function (err, result) {
       if (err) throw err;
       if(result.length>0){
