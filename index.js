@@ -227,6 +227,35 @@ app.route('/user/:emailUser')
         res.send(result[0]);
       })
   })
+  .patch(async function (req, res){
+    connectMysql.query(`SELECT * FROM users WHERE email ='${req.params.emailUser}';`
+      , function (err, result) {
+      if (err) throw err;
+      if(result.length>0){
+        if(result[0].password === md5(req.body.LastPassword)){
+          connectMysql.query(`UPDATE users
+          SET password = '${md5(req.body.NewPassword)}'
+          WHERE email = '${req.params.emailUser}';`
+              ,function(err, result2){
+                if (err) throw err;
+                res.status(200);
+                console.log('Change Password success...');
+                res.send(result[0]);
+              })
+        }
+        else{
+          res.status(401);
+          console.log('Change Password unsuccess: password notCorrect...');
+          res.send('Password not correct');
+        }
+      } else {
+        res.status(404);
+        console.log('User not found...');
+        res.send('User not found');
+      }
+  })
+
+  })
 
 app.route('/productsFilter')
   .post(async function (req, res){
