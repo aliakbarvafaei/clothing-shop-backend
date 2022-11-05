@@ -8,6 +8,7 @@ const http = require("http");
 const helmet = require("helmet");
 const compression = require("compression");
 const logger = require('morgan'); 
+const jwt = require('jsonwebtoken');
 const { allowedDomains, port } = require("./config/config");
 const mysql = require('mysql');
 const { insertDataProduct } = require("./public/database/methodMysql");
@@ -164,6 +165,7 @@ app.post("/register",async function(req , res){
   })
 
 });
+const SECRET = "secret";
 
 app.post("/login",async function(req , res){
   connectMysql.query(`SELECT * FROM users WHERE email ='${req.body.email}';`
@@ -173,7 +175,8 @@ app.post("/login",async function(req , res){
         if(result[0].password === md5(req.body.password)){
           res.status(200);
           console.log('Login success...');
-          res.send(result[0]);
+          const token = jwt.sign({user:req.body.email},SECRET, {expiresIn: "5m"});
+          res.send({data: result[0],token: token});
         }
         else{
           res.status(401);
@@ -219,13 +222,20 @@ app.route('/products')
         })
   });
 
-app.route('/user/:emailUser')
+app.route('/user') 
   .get(async function (req, res){
-    connectMysql.query(`SELECT * FROM users WHERE email='${req.params.emailUser}'`
+    try{
+      const emailUser = (jwt.verify(req.headers.token, SECRET).user);
+      connectMysql.query(`SELECT * FROM users WHERE email='${emailUser}'`
       ,function(err, result){
         if (err) throw err;
         res.send(result[0]);
       })
+    }
+    catch{
+      res.status(404);
+      res.send("failure");
+    }
   })
   .patch(async function (req, res){
     connectMysql.query(`SELECT * FROM users WHERE email ='${req.params.emailUser}';`
