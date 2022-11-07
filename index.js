@@ -46,7 +46,6 @@ app.route('/isincart/:emailUser')
         res.send(String(result[0].quantity));
       } else {
         res.status(404);
-        console.log("data not exist in cart");
         res.send('not exist');
       }
     });
@@ -57,10 +56,8 @@ app.route('/cart/:emailUser')
     connectMysql.query("SELECT * FROM `carts` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
       , function (err, result) {
       if (err) throw err;
-      console.log(result)
       if (result.length>0) {
         res.status(409);
-        console.log("data exist...");
         res.send('exist');
       } else {
         connectMysql.query("INSERT INTO `carts` (email,code,quantity) VALUES ('"+req.params.emailUser+"',"+req.body.code+","+req.body.quantity+")"
@@ -108,10 +105,8 @@ app.route('/wishlist/:emailUser')
     connectMysql.query("SELECT * FROM `wishlists` WHERE email ='"+req.params.emailUser+"' AND code ="+req.body.code+";"
       , function (err, result) {
       if (err) throw err;
-      console.log(result)
       if (result.length>0) {
         res.status(409);
-        console.log("data exist...");
         res.send('exist');
       } else {
         connectMysql.query("INSERT INTO `wishlists` (email,code) VALUES ('"+req.params.emailUser+"',"+req.body.code+")"
@@ -150,7 +145,6 @@ app.post("/register",async function(req , res){
       if (err) throw err;
       if(result.length>0){
         res.status(409);
-        console.log("data exist...");
         res.send('exist');
       } else {
         connectMysql.query(`INSERT INTO users (email,fname,lname,password) 
@@ -158,7 +152,6 @@ app.post("/register",async function(req , res){
         ,function(err, result){
           if (err) throw err;
           res.status(201);
-          console.log('registered...');
           res.send("registered");
         })
       }
@@ -174,18 +167,15 @@ app.post("/login",async function(req , res){
       if(result.length>0){
         if(result[0].password === md5(req.body.password)){
           res.status(200);
-          console.log('Login success...');
           const token = jwt.sign({user:req.body.email},SECRET, {expiresIn: "5m"});
           res.send({data: result[0],token: token});
         }
         else{
           res.status(401);
-          console.log('Login unsuccess: password notCorrect...');
           res.send('Password not correct');
         }
       } else {
         res.status(404);
-        console.log('User not found...');
         res.send('User not found');
       }
   })
@@ -249,18 +239,15 @@ app.route('/user')
               ,function(err, result2){
                 if (err) throw err;
                 res.status(200);
-                console.log('Change Password success...');
                 res.send(result[0]);
               })
         }
         else{
           res.status(401);
-          console.log('Change Password unsuccess: password notCorrect...');
           res.send('Password not correct');
         }
       } else {
         res.status(404);
-        console.log('User not found...');
         res.send('User not found');
       }
   })
@@ -307,11 +294,9 @@ app.route("/product/:idProduct")
       , function (err, result) {
       if (err) throw err;
       if(result.length>0){
-        console.log('Product found...');
         res.send(result[0]);
       }else{
         res.status(404);
-        console.log('Product not found...');
         res.send('Product not found');
       }
     })
